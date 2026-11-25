@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Visitor Slideshow</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="display-mode">
+  <div id="idle-screen">
+    <h1>Welcome!</h1>
+    <p>Upload your photos to see them live on this screen.</p>
+  </div>
+
+  <div id="slideshow-container">
+    <img id="slide-img" src="" alt="Visitor Photo" />
+    <div class="overlay">
+      <h2 id="visitor-name"></h2>
+      <span id="visitor-badge" class="badge"></span>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/display.js"></script>
+</body>
+</html>
