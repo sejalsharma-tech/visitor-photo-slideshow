@@ -36,23 +36,38 @@
     </button>
   </div>
 
-  <div id="idle-screen">
-    <svg style="width:68px;height:68px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(56,189,248,0.5));" viewBox="0 0 48 48" fill="none">
-      <defs>
-        <linearGradient id="tvPrism" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#38BDF8" />
-          <stop offset="50%" stop-color="#818CF8" />
-          <stop offset="100%" stop-color="#F472B6" />
-        </linearGradient>
-      </defs>
-      <rect x="4" y="4" width="40" height="40" rx="12" fill="rgba(15,23,42,0.85)" stroke="url(#tvPrism)" stroke-width="2" />
-      <circle class="logo-orbit" cx="24" cy="24" r="13" stroke="url(#tvPrism)" stroke-width="1.8" stroke-dasharray="6 4" />
-      <path class="logo-core" d="M24 14L31 24L24 34L17 24L24 14Z" fill="url(#tvPrism)" fill-opacity="0.3" stroke="#E0F2FE" stroke-width="1.5" />
-      <circle cx="24" cy="24" r="3.2" fill="#FFFFFF" />
-    </svg>
-    <h1>Welcome to LuminaCast</h1>
-    <p>Upload your favorite moments from your phone or laptop and watch them appear live right here.</p>
-    <div class="url-chip" id="uploadUrlChip">Open Upload Page on Your Device</div>
+  <div id="idle-screen" class="idle-layout">
+    <div class="idle-copy">
+      <svg style="width:64px;height:64px;margin-bottom:14px;filter:drop-shadow(0 0 20px rgba(56,189,248,0.5));" viewBox="0 0 48 48" fill="none">
+        <defs>
+          <linearGradient id="tvPrism" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#38BDF8" />
+            <stop offset="50%" stop-color="#818CF8" />
+            <stop offset="100%" stop-color="#F472B6" />
+          </linearGradient>
+        </defs>
+        <rect x="4" y="4" width="40" height="40" rx="12" fill="rgba(15,23,42,0.85)" stroke="url(#tvPrism)" stroke-width="2" />
+        <circle class="logo-orbit" cx="24" cy="24" r="13" stroke="url(#tvPrism)" stroke-width="1.8" stroke-dasharray="6 4" />
+        <path class="logo-core" d="M24 14L31 24L24 34L17 24L24 14Z" fill="url(#tvPrism)" fill-opacity="0.3" stroke="#E0F2FE" stroke-width="1.5" />
+        <circle cx="24" cy="24" r="3.2" fill="#FFFFFF" />
+      </svg>
+      <h1>Welcome to LuminaCast</h1>
+      <p>Scan the QR code with your phone camera to share your photos live on this screen.</p>
+      <div class="idle-steps">
+        <span class="step-pill">1. Scan QR</span>
+        <span class="step-pill">2. Select Photos</span>
+        <span class="step-pill">3. Live on TV</span>
+      </div>
+      <div class="url-chip" id="uploadUrlChip">Open Upload Page on Your Device</div>
+    </div>
+
+    <div class="qr-card" id="qrCard">
+      <div class="qr-frame">
+        <img id="qrImage" src="" alt="Scan to Upload Photos" />
+        <div class="qr-scanline"></div>
+      </div>
+      <div class="qr-caption">Scan with Phone Camera</div>
+    </div>
   </div>
 
   <div id="slideshow-container">

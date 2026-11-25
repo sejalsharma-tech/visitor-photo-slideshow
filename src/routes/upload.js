@@ -2,6 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const QRCode = require('qrcode');
 const db = require('../db');
 
 const router = express.Router();
@@ -9,6 +11,22 @@ const router = express.Router();
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.webp'];
 const MAX_SIZE_BYTES = (parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 5) * 1024 * 1024;
+
+function getUploadUrl(req) {
+  const port = process.env.PORT || 3000;
+  const host = req.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          return `http://${iface.address}:${port}`;
+        }
+      }
+    }
+  }
+  return `${req.protocol}://${req.get('host')}`;
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../../uploads')),
@@ -31,9 +49,23 @@ const upload = multer({
   },
 });
 
-router.get('/config', (req, res) => {
+router.get('/config', async (req, res) => {
+  const uploadUrl = getUploadUrl(req);
+  let qrDataUrl = null;
+  try {
+    qrDataUrl = await QRCode.toDataURL(uploadUrl, {
+      width: 260,
+      margin: 2,
+      color: { dark: '#050816', light: '#ffffff' },
+    });
+  } catch (err) {
+    console.error('QR generation failed:', err);
+  }
+
   res.json({
     slideDurationMs: parseInt(process.env.SLIDE_DURATION_MS, 10) || 8000,
+    uploadUrl,
+    qrDataUrl,
   });
 });
 
@@ -105,12 +137,10 @@ router.post('/upload', upload.array('photos', 5), async (req, res) => {
       photos: [...newPhotos, ...previousPhotos],
     };
 
-    // Check if any TV display is currently connected
     const connectedSockets = await io.fetchSockets();
     if (connectedSockets.length > 1) {
       io.emit('new-slideshow-batch', slideshowBatch);
     } else {
-      // Store in server buffer so when /display opens next, it plays immediately
       req.app.locals.unplayedBatches.push(slideshowBatch);
       if (req.app.locals.unplayedBatches.length > 20) {
         req.app.locals.unplayedBatches.shift();
@@ -160,7 +190,6 @@ router.delete('/photos', async (req, res) => {
 
     await db.query('DELETE FROM visitors WHERE id = ?', [visitorId]);
 
-    // Purge deleted photos from server buffer & live TV queue
     req.app.locals.unplayedBatches = req.app.locals.unplayedBatches.filter(
       (b) => !b.photos.some((p) => deletedUrls.includes(p.url))
     );

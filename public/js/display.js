@@ -10,8 +10,8 @@ const queueStatus = document.getElementById('queue-status');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const reactionLayer = document.getElementById('reaction-layer');
 const uploadUrlChip = document.getElementById('uploadUrlChip');
-
-uploadUrlChip.textContent = `Visit ${window.location.origin} to Upload`;
+const qrCard = document.getElementById('qrCard');
+const qrImage = document.getElementById('qrImage');
 
 let queue = [];
 let isPlaying = false;
@@ -22,10 +22,18 @@ fetch('/api/config')
   .then((res) => res.json())
   .then((data) => {
     if (data.slideDurationMs) slideDurationMs = data.slideDurationMs;
+    if (data.uploadUrl) {
+      uploadUrlChip.textContent = data.uploadUrl;
+    }
+    if (data.qrDataUrl && qrImage) {
+      qrImage.src = data.qrDataUrl;
+      qrCard.style.display = 'flex';
+    }
   })
-  .catch(() => {});
+  .catch(() => {
+    uploadUrlChip.textContent = window.location.origin;
+  });
 
-// Register this tab as TV Display so server immediately sends pending or recent uploads
 socket.on('connect', () => {
   socket.emit('register-display');
 });
@@ -91,7 +99,7 @@ function playNext() {
   if (queue.length === 0) {
     isPlaying = false;
     container.style.display = 'none';
-    idleScreen.style.display = 'block';
+    idleScreen.style.display = 'flex';
     updateHud();
     return;
   }
