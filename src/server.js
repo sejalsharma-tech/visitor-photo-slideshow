@@ -37,6 +37,12 @@ app.use((err, req, res, next) => {
 
 io.on('connection', (socket) => {
   console.log('Display/Client connected:', socket.id);
+
+  socket.on('send-reaction', (data) => {
+    if (data && data.emoji) {
+      io.emit('live-reaction', { emoji: String(data.emoji).slice(0, 4) });
+    }
+  });
 });
 
 const PORT = process.env.PORT || 3000;

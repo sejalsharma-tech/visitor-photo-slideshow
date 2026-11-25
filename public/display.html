@@ -7,18 +7,41 @@
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body class="display-mode">
+  <div class="aurora-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="aurora-grid"></div>
+  </div>
+
+  <div class="tv-hud">
+    <div class="hud-pill">
+      <span class="live-dot"></span>
+      <span id="queue-status">LIVE • Waiting for uploads</span>
+    </div>
+    <button type="button" class="hud-pill hud-btn" id="fullscreenBtn">⛶ Fullscreen</button>
+  </div>
+
   <div id="idle-screen">
-    <h1>Welcome!</h1>
-    <p>Upload your photos to see them live on this screen.</p>
+    <div class="pill-tag"><span class="live-dot"></span> Interactive Wall</div>
+    <h1>Welcome to the Showcase</h1>
+    <p>Upload your favorite moments from your phone or laptop and watch them appear live right here.</p>
+    <div class="url-chip" id="uploadUrlChip">Open Upload Page on Your Device</div>
   </div>
 
   <div id="slideshow-container">
+    <div id="ambient-backdrop"></div>
     <img id="slide-img" src="" alt="Visitor Photo" />
     <div class="overlay">
       <h2 id="visitor-name"></h2>
       <span id="visitor-badge" class="badge"></span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
     </div>
   </div>
+
+  <div id="reaction-layer"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/display.js"></script>
