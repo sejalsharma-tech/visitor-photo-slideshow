@@ -6,6 +6,7 @@ const cors = require('cors');
 const multer = require('multer');
 require('dotenv').config();
 
+const db = require('./db');
 const uploadRoutes = require('./routes/upload');
 
 const app = express();
@@ -13,6 +14,8 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 app.set('io', io);
+app.locals.unplayedBatches = [];
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
@@ -36,7 +39,41 @@ app.use((err, req, res, next) => {
 });
 
 io.on('connection', (socket) => {
-  console.log('Display/Client connected:', socket.id);
+  console.log('Client connected:', socket.id);
+
+  // When TV Display connects (even AFTER photos were uploaded), send pending or recent slides
+  socket.on('register-display', async () => {
+    const pending = app.locals.unplayedBatches;
+    if (pending.length > 0) {
+      socket.emit('sync-batches', pending);
+      app.locals.unplayedBatches = [];
+      return;
+    }
+
+    try {
+      const [rows] = await db.query(`
+        SELECT v.name AS visitorName, p.filename
+        FROM photos p
+        JOIN visitors v ON p.visitor_id = v.id
+        ORDER BY p.uploaded_at DESC
+        LIMIT 6
+      `);
+
+      if (rows.length > 0) {
+        const recentBatch = {
+          visitorName: rows[0].visitorName,
+          isReturning: false,
+          photos: rows.reverse().map((r) => ({
+            url: `/uploads/${r.filename}`,
+            isPrevious: false,
+          })),
+        };
+        socket.emit('sync-batches', [recentBatch]);
+      }
+    } catch (err) {
+      console.error('Error syncing recent slides:', err);
+    }
+  });
 
   socket.on('send-reaction', (data) => {
     if (data && data.emoji) {

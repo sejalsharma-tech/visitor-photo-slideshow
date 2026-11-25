@@ -33,7 +33,7 @@ const upload = multer({
 
 router.get('/config', (req, res) => {
   res.json({
-    slideDurationMs: parseInt(process.env.SLIDE_DURATION_MS, 10) || 5000,
+    slideDurationMs: parseInt(process.env.SLIDE_DURATION_MS, 10) || 8000,
   });
 });
 
@@ -104,7 +104,19 @@ router.post('/upload', upload.array('photos', 5), async (req, res) => {
       isReturning,
       photos: [...newPhotos, ...previousPhotos],
     };
-    io.emit('new-slideshow-batch', slideshowBatch);
+
+    // Check if any TV display is currently connected
+    const connectedSockets = await io.fetchSockets();
+    if (connectedSockets.length > 1) {
+      io.emit('new-slideshow-batch', slideshowBatch);
+    } else {
+      // Store in server buffer so when /display opens next, it plays immediately
+      req.app.locals.unplayedBatches.push(slideshowBatch);
+      if (req.app.locals.unplayedBatches.length > 20) {
+        req.app.locals.unplayedBatches.shift();
+      }
+      io.emit('new-slideshow-batch', slideshowBatch);
+    }
 
     res.status(201).json({
       message: isReturning
@@ -130,21 +142,30 @@ router.delete('/photos', async (req, res) => {
     }
 
     const normalizedId = identifier.trim().toLowerCase();
-    const [visitors] = await db.query('SELECT id FROM visitors WHERE identifier = ?', [normalizedId]);
+    const [visitors] = await db.query('SELECT id, name FROM visitors WHERE identifier = ?', [normalizedId]);
 
     if (visitors.length === 0) {
       return res.status(404).json({ error: 'No records found for this Email/Phone.' });
     }
 
     const visitorId = visitors[0].id;
+    const deletedUrls = [];
     const [photos] = await db.query('SELECT filename FROM photos WHERE visitor_id = ?', [visitorId]);
 
     photos.forEach((p) => {
+      deletedUrls.push(`/uploads/${p.filename}`);
       const filePath = path.join(__dirname, '../../uploads', p.filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     });
 
     await db.query('DELETE FROM visitors WHERE id = ?', [visitorId]);
+
+    // Purge deleted photos from server buffer & live TV queue
+    req.app.locals.unplayedBatches = req.app.locals.unplayedBatches.filter(
+      (b) => !b.photos.some((p) => deletedUrls.includes(p.url))
+    );
+    const io = req.app.get('io');
+    io.emit('purge-urls', deletedUrls);
 
     res.json({ message: 'All your photos and data have been permanently deleted.' });
   } catch (err) {

@@ -13,9 +13,10 @@ const uploadUrlChip = document.getElementById('uploadUrlChip');
 
 uploadUrlChip.textContent = `Visit ${window.location.origin} to Upload`;
 
-const queue = [];
+let queue = [];
 let isPlaying = false;
-let slideDurationMs = 5000;
+let slideDurationMs = 8000;
+let slideTimer = null;
 
 fetch('/api/config')
   .then((res) => res.json())
@@ -24,13 +25,16 @@ fetch('/api/config')
   })
   .catch(() => {});
 
+// Register this tab as TV Display so server immediately sends pending or recent uploads
+socket.on('connect', () => {
+  socket.emit('register-display');
+});
+
 fullscreenBtn.addEventListener('click', () => {
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(() => {});
-    fullscreenBtn.textContent = '✕ Exit Fullscreen';
   } else {
     document.exitFullscreen().catch(() => {});
-    fullscreenBtn.textContent = '⛶ Fullscreen';
   }
 });
 
@@ -44,7 +48,7 @@ function updateHud() {
   }
 }
 
-socket.on('new-slideshow-batch', (batch) => {
+function enqueueBatch(batch) {
   batch.photos.forEach((photo) => {
     queue.push({
       visitorName: batch.visitorName,
@@ -53,11 +57,23 @@ socket.on('new-slideshow-batch', (batch) => {
       isPrevious: photo.isPrevious,
     });
   });
-
   updateHud();
   if (!isPlaying) {
     playNext();
   }
+}
+
+socket.on('sync-batches', (batches) => {
+  batches.forEach((batch) => enqueueBatch(batch));
+});
+
+socket.on('new-slideshow-batch', (batch) => {
+  enqueueBatch(batch);
+});
+
+socket.on('purge-urls', (deletedUrls) => {
+  queue = queue.filter((item) => !deletedUrls.includes(item.url));
+  updateHud();
 });
 
 socket.on('live-reaction', ({ emoji }) => {
@@ -70,6 +86,8 @@ socket.on('live-reaction', ({ emoji }) => {
 });
 
 function playNext() {
+  clearTimeout(slideTimer);
+
   if (queue.length === 0) {
     isPlaying = false;
     container.style.display = 'none';
@@ -85,7 +103,6 @@ function playNext() {
   idleScreen.style.display = 'none';
   container.style.display = 'flex';
 
-  // Restart Ken Burns image animation cleanly
   slideImg.style.animation = 'none';
   void slideImg.offsetWidth;
   slideImg.style.animation = `kenBurns ${slideDurationMs + 800}ms ease-out forwards`;
@@ -105,12 +122,11 @@ function playNext() {
     visitorBadgeEl.className = 'badge';
   }
 
-  // Animate bottom timer progress bar
   progressFill.style.transition = 'none';
   progressFill.style.width = '0%';
   void progressFill.offsetWidth;
   progressFill.style.transition = `width ${slideDurationMs}ms linear`;
   progressFill.style.width = '100%';
 
-  setTimeout(playNext, slideDurationMs);
+  slideTimer = setTimeout(playNext, slideDurationMs);
 }

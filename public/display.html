@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Visitor Slideshow</title>
+  <title>LuminaCast • Live Visitor Slideshow</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body class="display-mode">
@@ -13,18 +13,44 @@
     <div class="orb orb-3"></div>
     <div class="aurora-grid"></div>
   </div>
+  <canvas id="particleCanvas"></canvas>
 
   <div class="tv-hud">
     <div class="hud-pill">
+      <svg style="width:24px;height:24px;" viewBox="0 0 48 48" fill="none">
+        <circle class="logo-orbit" cx="24" cy="24" r="16" stroke="#38BDF8" stroke-width="2.5" stroke-dasharray="8 5" />
+        <circle cx="24" cy="24" r="6" fill="#F472B6" />
+      </svg>
       <span class="live-dot"></span>
       <span id="queue-status">LIVE • Waiting for uploads</span>
     </div>
-    <button type="button" class="hud-pill hud-btn" id="fullscreenBtn">⛶ Fullscreen</button>
+
+    <button type="button" class="hud-pill hud-btn" id="fullscreenBtn">
+      <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 3 21 3 21 9" />
+        <polyline points="9 21 3 21 3 15" />
+        <line x1="21" y1="3" x2="14" y2="10" />
+        <line x1="3" y1="21" x2="10" y2="14" />
+      </svg>
+      <span>Fullscreen</span>
+    </button>
   </div>
 
   <div id="idle-screen">
-    <div class="pill-tag"><span class="live-dot"></span> Interactive Wall</div>
-    <h1>Welcome to the Showcase</h1>
+    <svg style="width:68px;height:68px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(56,189,248,0.5));" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="tvPrism" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#38BDF8" />
+          <stop offset="50%" stop-color="#818CF8" />
+          <stop offset="100%" stop-color="#F472B6" />
+        </linearGradient>
+      </defs>
+      <rect x="4" y="4" width="40" height="40" rx="12" fill="rgba(15,23,42,0.85)" stroke="url(#tvPrism)" stroke-width="2" />
+      <circle class="logo-orbit" cx="24" cy="24" r="13" stroke="url(#tvPrism)" stroke-width="1.8" stroke-dasharray="6 4" />
+      <path class="logo-core" d="M24 14L31 24L24 34L17 24L24 14Z" fill="url(#tvPrism)" fill-opacity="0.3" stroke="#E0F2FE" stroke-width="1.5" />
+      <circle cx="24" cy="24" r="3.2" fill="#FFFFFF" />
+    </svg>
+    <h1>Welcome to LuminaCast</h1>
     <p>Upload your favorite moments from your phone or laptop and watch them appear live right here.</p>
     <div class="url-chip" id="uploadUrlChip">Open Upload Page on Your Device</div>
   </div>
@@ -44,6 +70,7 @@
   <div id="reaction-layer"></div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/bg-canvas.js"></script>
   <script src="/js/display.js"></script>
 </body>
 </html>

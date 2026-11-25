@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Visitor Photo Upload</title>
+  <title>LuminaCast • Visitor Photo Upload</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -13,13 +13,38 @@
     <div class="orb orb-3"></div>
     <div class="aurora-grid"></div>
   </div>
+  <canvas id="particleCanvas"></canvas>
 
   <div class="card" id="tiltCard">
-    <div class="pill-tag">
-      <span class="live-dot"></span> Live Venue Stream
+    <div class="brand-header">
+      <div class="brand-lockup">
+        <!-- Custom Animated LuminaCast SVG Logo -->
+        <svg class="brand-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="prismGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#38BDF8" />
+              <stop offset="50%" stop-color="#818CF8" />
+              <stop offset="100%" stop-color="#F472B6" />
+            </linearGradient>
+          </defs>
+          <rect x="4" y="4" width="40" height="40" rx="12" fill="rgba(15,23,42,0.85)" stroke="url(#prismGrad)" stroke-width="2" />
+          <circle class="logo-orbit" cx="24" cy="24" r="13" stroke="url(#prismGrad)" stroke-width="1.75" stroke-dasharray="6 4" />
+          <path class="logo-core" d="M24 14L31 24L24 34L17 24L24 14Z" fill="url(#prismGrad)" fill-opacity="0.28" stroke="#E0F2FE" stroke-width="1.5" />
+          <circle cx="24" cy="24" r="3.2" fill="#FFFFFF" />
+        </svg>
+        <div>
+          <div class="brand-name">LuminaCast</div>
+          <div class="brand-sub">Live Showcase</div>
+        </div>
+      </div>
+
+      <div class="pill-tag">
+        <span class="live-dot"></span> Live Stream
+      </div>
     </div>
+
     <h1>Share Your Moment</h1>
-    <p class="subtitle">Upload photos to appear live on the big screen—returning visitors automatically replay past memories.</p>
+    <p class="subtitle">Cast your photos to the big screen—returning visitors automatically replay past memories.</p>
 
     <form id="uploadForm">
       <div class="form-group">
@@ -35,9 +60,15 @@
       <div class="form-group">
         <label>Photos (Max 5 • JPG, PNG, WEBP • up to 5MB each)</label>
         <div class="drop-zone" id="dropZone">
-          <span class="drop-icon">📸</span>
+          <div class="drop-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
           <div class="drop-title">Drag &amp; drop photos here, or click to browse</div>
-          <div class="drop-hint">Instant live queue to the Smart TV display</div>
+          <div class="drop-hint">Instant sync to Smart TV display</div>
           <input type="file" id="photos" accept=".jpg,.jpeg,.png,.webp" multiple hidden />
         </div>
         <div class="preview-grid" id="previewGrid"></div>
@@ -45,10 +76,22 @@
 
       <div class="consent-box">
         <input type="checkbox" id="consent" required />
-        <label for="consent">I consent to my name and uploaded photos being displayed publicly on the venue screen.</label>
+        <label for="consent">
+          <svg class="svg-icon" style="color:#38bdf8; margin-right:4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <polyline points="9 12 11 14 15 10" />
+          </svg>
+          I consent to my name and uploaded photos being displayed publicly on the venue screen.
+        </label>
       </div>
 
-      <button type="submit" class="btn-primary" id="submitBtn">Upload &amp; Cast to Screen</button>
+      <button type="submit" class="btn-primary" id="submitBtn">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
+          <line x1="2" y1="20" x2="2.01" y2="20" />
+        </svg>
+        <span>Upload &amp; Cast to Screen</span>
+      </button>
     </form>
 
     <div id="status" class="status"></div>
@@ -73,12 +116,26 @@
     </div>
 
     <div class="opt-out">
-      <a href="/display" target="_blank" class="link-btn">Open TV Display ↗</a>
-      <button type="button" class="btn-danger-ghost" id="deleteBtn">Remove My Photos</button>
+      <a href="/display" target="_blank" class="link-btn">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+        Open TV Display ↗
+      </a>
+      <button type="button" class="btn-danger-ghost" id="deleteBtn">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+        Remove My Photos
+      </button>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/bg-canvas.js"></script>
   <script src="/js/upload.js"></script>
 </body>
 </html>
