@@ -1,0 +1,22 @@
+CREATE DATABASE IF NOT EXISTS visitor_slideshow;
+USE visitor_slideshow;
+
+CREATE TABLE IF NOT EXISTS visitors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  identifier VARCHAR(150) NOT NULL UNIQUE,
+  consent_given BOOLEAN NOT NULL DEFAULT TRUE,
+  consent_timestamp DATETIME NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS photos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  visitor_id INT NOT NULL,
+  filename VARCHAR(255) NOT NULL,
+  original_name VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(50) NOT NULL,
+  size_bytes INT NOT NULL,
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (visitor_id) REFERENCES visitors(id) ON DELETE CASCADE
+);
