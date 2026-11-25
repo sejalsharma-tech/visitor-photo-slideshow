@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visitor Photo Upload</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="card">
+    <h1>Visitor Photo Slideshow</h1>
+    <p class="subtitle">Share your photos on the live venue screen.</p>
+
+    <form id="uploadForm">
+      <div class="form-group">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" required placeholder="e.g. Aarav Patel" />
+      </div>
+
+      <div class="form-group">
+        <label for="identifier">Email or Phone Number (to recognize returning visits)</label>
+        <input type="text" id="identifier" required placeholder="e.g. aarav@example.com" />
+      </div>
+
+      <div class="form-group">
+        <label for="photos">Select Photos (Max 5, JPG/PNG/WEBP, up to 5MB each)</label>
+        <input type="file" id="photos" accept=".jpg,.jpeg,.png,.webp" multiple required />
+      </div>
+
+      <div class="consent-box">
+        <input type="checkbox" id="consent" required />
+        <label for="consent">I consent to my name and uploaded photos being displayed publicly on the venue screen.</label>
+      </div>
+
+      <button type="submit" id="submitBtn">Upload &amp; Show on Screen</button>
+    </form>
+
+    <div id="status" class="status"></div>
+
+    <div class="opt-out">
+      <button type="button" id="deleteBtn">Remove My Uploaded Photos</button>
+    </div>
+  </div>
+
+  <script src="/js/upload.js"></script>
+</body>
+</html>
