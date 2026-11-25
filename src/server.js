@@ -41,7 +41,6 @@ app.use((err, req, res, next) => {
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
-  // Sync unplayed priority batches + seed continuous loop pool from MySQL
   socket.on('register-display', async () => {
     const pending = app.locals.unplayedBatches;
     if (pending.length > 0) {
@@ -51,7 +50,7 @@ io.on('connection', (socket) => {
 
     try {
       const [rows] = await db.query(`
-        SELECT v.name AS visitorName, p.filename
+        SELECT v.name AS visitorName, p.filename, p.caption, p.frame_style
         FROM photos p
         JOIN visitors v ON p.visitor_id = v.id
         ORDER BY p.uploaded_at ASC
@@ -63,6 +62,8 @@ io.on('connection', (socket) => {
           visitorName: r.visitorName,
           isReturning: false,
           url: `/uploads/${r.filename}`,
+          caption: r.caption || '',
+          frameStyle: r.frame_style || 'glass',
           isPrevious: false,
         }));
         socket.emit('seed-loop-pool', loopSlides);

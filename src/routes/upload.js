@@ -10,7 +10,29 @@ const router = express.Router();
 
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.webp'];
+const ALLOWED_FRAMES = ['glass', 'polaroid', 'warm', 'noir'];
 const MAX_SIZE_BYTES = (parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 5) * 1024 * 1024;
+
+// Public display profanity guard
+const BLOCKED_WORDS = [
+  'fuck', 'shit', 'bitch', 'asshole', 'bastard', 'dick', 'pussy',
+  'slut', 'whore', 'nigger', 'faggot', 'cunt', 'motherfucker', 'porn', 'nude'
+];
+
+function containsProfanity(text) {
+  if (!text) return false;
+  const normalized = text.toLowerCase();
+  return BLOCKED_WORDS.some((word) => new RegExp(`\\b${word}\\b`, 'i').test(normalized));
+}
+
+function cleanupUploadedFiles(files) {
+  if (!files || !Array.isArray(files)) return;
+  files.forEach((f) => {
+    if (f.path && fs.existsSync(f.path)) {
+      fs.unlinkSync(f.path);
+    }
+  });
+}
 
 function getUploadUrl(req) {
   const port = process.env.PORT || 3000;
@@ -70,22 +92,32 @@ router.get('/config', async (req, res) => {
 });
 
 router.post('/upload', upload.array('photos', 5), async (req, res) => {
+  const files = req.files;
   try {
-    const { name, identifier, consent } = req.body;
-    const files = req.files;
+    const { name, identifier, consent, caption, frameStyle } = req.body;
 
     if (!name || !identifier) {
+      cleanupUploadedFiles(files);
       return res.status(400).json({ error: 'Name and Email/Phone are required.' });
     }
     if (consent !== 'true') {
+      cleanupUploadedFiles(files);
       return res.status(400).json({ error: 'Public display consent is required.' });
     }
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'Please upload at least one photo.' });
     }
 
+    const cleanName = name.trim().slice(0, 100);
+    const cleanCaption = caption ? caption.trim().slice(0, 80) : '';
+    const selectedFrame = ALLOWED_FRAMES.includes(frameStyle) ? frameStyle : 'glass';
+
+    if (containsProfanity(cleanName) || containsProfanity(cleanCaption)) {
+      cleanupUploadedFiles(files);
+      return res.status(400).json({ error: 'Name or shoutout contains inappropriate words for public display.' });
+    }
+
     const normalizedId = identifier.trim().toLowerCase();
-    const cleanName = name.trim();
 
     const [existingVisitors] = await db.query(
       'SELECT * FROM visitors WHERE identifier = ?',
@@ -103,11 +135,13 @@ router.post('/upload', upload.array('photos', 5), async (req, res) => {
       await db.query('UPDATE visitors SET name = ? WHERE id = ?', [cleanName, visitorId]);
 
       const [prevRows] = await db.query(
-        'SELECT filename FROM photos WHERE visitor_id = ? ORDER BY uploaded_at DESC LIMIT 5',
+        'SELECT filename, caption, frame_style FROM photos WHERE visitor_id = ? ORDER BY uploaded_at DESC LIMIT 5',
         [visitorId]
       );
       previousPhotos = prevRows.map((row) => ({
         url: `/uploads/${row.filename}`,
+        caption: row.caption || '',
+        frameStyle: row.frame_style || 'glass',
         isPrevious: true,
       }));
     } else {
@@ -121,11 +155,13 @@ router.post('/upload', upload.array('photos', 5), async (req, res) => {
     const newPhotos = [];
     for (const file of files) {
       await db.query(
-        'INSERT INTO photos (visitor_id, filename, original_name, mime_type, size_bytes) VALUES (?, ?, ?, ?, ?)',
-        [visitorId, file.filename, file.originalname, file.mimetype, file.size]
+        'INSERT INTO photos (visitor_id, filename, original_name, mime_type, size_bytes, caption, frame_style) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [visitorId, file.filename, file.originalname, file.mimetype, file.size, cleanCaption || null, selectedFrame]
       );
       newPhotos.push({
         url: `/uploads/${file.filename}`,
+        caption: cleanCaption,
+        frameStyle: selectedFrame,
         isPrevious: false,
       });
     }
@@ -159,6 +195,7 @@ router.post('/upload', upload.array('photos', 5), async (req, res) => {
       uploadedPhotos: newPhotos,
     });
   } catch (err) {
+    cleanupUploadedFiles(files);
     console.error(err);
     res.status(500).json({ error: 'Server error while processing upload.' });
   }

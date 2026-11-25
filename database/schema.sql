@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS photos (
   original_name VARCHAR(255) NOT NULL,
   mime_type VARCHAR(50) NOT NULL,
   size_bytes INT NOT NULL,
+  caption VARCHAR(100) DEFAULT NULL,
+  frame_style VARCHAR(20) NOT NULL DEFAULT 'glass',
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (visitor_id) REFERENCES visitors(id) ON DELETE CASCADE
 );
