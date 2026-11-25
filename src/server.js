@@ -41,13 +41,12 @@ app.use((err, req, res, next) => {
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
-  // When TV Display connects (even AFTER photos were uploaded), send pending or recent slides
+  // Sync unplayed priority batches + seed continuous loop pool from MySQL
   socket.on('register-display', async () => {
     const pending = app.locals.unplayedBatches;
     if (pending.length > 0) {
       socket.emit('sync-batches', pending);
       app.locals.unplayedBatches = [];
-      return;
     }
 
     try {
@@ -55,23 +54,21 @@ io.on('connection', (socket) => {
         SELECT v.name AS visitorName, p.filename
         FROM photos p
         JOIN visitors v ON p.visitor_id = v.id
-        ORDER BY p.uploaded_at DESC
-        LIMIT 6
+        ORDER BY p.uploaded_at ASC
+        LIMIT 30
       `);
 
       if (rows.length > 0) {
-        const recentBatch = {
-          visitorName: rows[0].visitorName,
+        const loopSlides = rows.map((r) => ({
+          visitorName: r.visitorName,
           isReturning: false,
-          photos: rows.reverse().map((r) => ({
-            url: `/uploads/${r.filename}`,
-            isPrevious: false,
-          })),
-        };
-        socket.emit('sync-batches', [recentBatch]);
+          url: `/uploads/${r.filename}`,
+          isPrevious: false,
+        }));
+        socket.emit('seed-loop-pool', loopSlides);
       }
     } catch (err) {
-      console.error('Error syncing recent slides:', err);
+      console.error('Error seeding loop pool:', err);
     }
   });
 
