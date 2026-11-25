@@ -1,37 +1,37 @@
 # Assumptions & Design Decisions
 
-This document outlines the gaps identified in the project requirements and the rationale behind each decision made.
+This document outlines every gap identified in the assignment requirements and the rationale behind each technical decision made.
 
 ## 1. Identifying Returning Visitors
-* **Gap:** Two different visitors can share the same name (e.g., two people named "Aarav"). Relying on name alone risks mixing up different people's photos.
-* **Decision:** Visitors are asked for their **Name** and a unique identifier (**Email or Phone Number**). The email/phone is normalized (trimmed and lowercased) and stored as a unique key in the database.
-* **Why:** It accurately links a returning visitor to their previous uploads without requiring complex user accounts, passwords, or facial recognition (which raises major privacy concerns).
+* **Gap:** Two different visitors can share the same name (e.g., two visitors named "Aarav"). Identifying visitors by name alone would mix up different people's photo histories.
+* **Decision:** Visitors provide their **Name** along with a unique identifier (**Email or Phone Number**). The identifier is trimmed, lowercased, and stored with a `UNIQUE` constraint in MySQL.
+* **Why:** Reliably links returning visitors to their previous uploads without requiring passwords, user accounts, or invasive facial recognition.
 
-## 2. Privacy & Consent
-* **Gap:** Photos are displayed publicly on a shared TV/monitor, requiring explicit permission and data hygiene.
+## 2. Privacy & Public Display Consent
+* **Gap:** Visitor photos are displayed publicly on a shared TV/monitor, requiring explicit informed consent and user control over personal data.
 * **Decision:**
-  * A **mandatory consent checkbox** must be checked before the upload button becomes active (*"I consent to my name and uploaded photos being displayed publicly on the venue screen"*).
-  * Consent timestamp is recorded in the database for accountability.
-  * **Retention Policy:** Uploaded photos are intended for temporary event display and should be purged after 24 hours (or manually cleared by an admin).
-  * **Opt-out:** Visitors can request deletion of their photos using their registered email/phone via a simple removal button on the upload page.
-* **Why:** Prevents accidental public exposure and ensures informed consent before any media hits the display.
+  * **Mandatory Consent Checkbox:** Uploads are blocked on both frontend and backend unless the visitor explicitly checks *"I consent to my name and uploaded photos being displayed publicly on the venue screen."*
+  * **Consent Audit Timestamp:** `consent_given` and `consent_timestamp` are recorded in the `visitors` table upon registration.
+  * **Right to Removal (Opt-Out):** Visitors can permanently remove all their photos at any time via the **Remove My Photos** button (`DELETE /api/photos`), which deletes image files from disk, removes database records via `ON DELETE CASCADE`, and purges them from the live TV queue.
+* **Why:** Prevents accidental public display and gives visitors immediate self-service deletion rights.
 
-## 3. File Validation & Upload Limits
-* **Gap:** Unvalidated uploads can crash the server, fill up disk space, or introduce malicious files.
+## 3. File Validation, Size Limits & Concurrency
+* **Gap:** Unvalidated uploads could crash the server, exhaust storage, or allow non-image payloads, while simultaneous uploads could cause race conditions on the TV screen.
 * **Decision:**
-  * **Allowed formats:** `.jpg`, `.jpeg`, `.png`, `.webp` (validated via both file extension and MIME type on the backend, not just the frontend).
-  * **Size limit:** Maximum **5 MB per photo**.
-  * **Batch limit:** Maximum **5 photos per upload session**.
-* **Why:** High-resolution phone photos fit comfortably under 5 MB, while strict backend validation prevents oversized or non-image payloads.
+  * **Allowed Formats:** Only `.jpg`, `.jpeg`, `.png`, and `.webp` are accepted, enforced on the backend via Multer using both `file.mimetype` and `path.extname()`.
+  * **Size & Batch Caps:** Maximum **5 MB per photo** and **5 photos per upload session**.
+  * **Concurrent Upload Handling:** The TV display uses a **FIFO `priorityQueue`** so simultaneous submissions play sequentially without overlapping slides.
+* **Why:** Backend MIME + extension checks cannot be bypassed by renaming files, and FIFO queuing ensures fair screen time under concurrent load.
 
-## 4. Handling Concurrent Uploads
-* **Gap:** Multiple visitors may upload photos at the exact same time, which could cause overlapping slides or skipped photos on the display.
-* **Decision:** The display screen maintains a **FIFO (First-In, First-Out) playback queue**. When an upload finishes, the server broadcasts the visitor's batch (new photos + any previous photos for returning visitors) via WebSockets (Socket.io) to the display, which appends them to the queue.
-* **Why:** Guarantees every visitor gets fair screen time without interrupting a photo that is currently being shown.
-
-## 5. Slideshow Behavior & Duration
-* **Gap:** Exact display timing and idle screen behavior were not specified.
+## 4. Order-Independent Sync & Continuous Slideshow Loop
+* **Gap:** A TV operator might open `/display` *after* visitors have already uploaded photos, and leaving the screen blank after one 5-second slide wastes display real estate.
 * **Decision:**
-  * Each photo displays for **5 seconds** (configurable via `.env`) along with a subtle overlay showing the visitor's name (and a "Welcome Back!" badge for returning visitors).
-  * **Returning Visitor Limit:** If a returning visitor has many historical photos, the slideshow plays their newly uploaded photos first, followed by up to their **5 most recent previous photos** so one person does not monopolize the screen.
-  * **Idle State:** When the queue is empty, the display shows a clean welcome screen prompting visitors to upload photos.
+  * **Server Replay Buffer & DB Seed:** The server caches unplayed batches in `app.locals.unplayedBatches` and seeds `/display` with recent consented photos from MySQL whenever a display connects (`register-display`).
+  * **Slide Timing & Returning Replay:** Each photo plays for **5 seconds** (`SLIDE_DURATION_MS=5000`). Returning visitors see their newly uploaded photos first (`Welcome Back!`), followed by up to **5 most recent previous photos** (`Memory from Previous Visit`).
+  * **Continuous Loop:** Once `priorityQueue` finishes, `/display` continuously cycles through `loopPool` (up to 30 consented photos) instead of reverting to an empty screen. The Welcome + QR idle screen appears only when 0 photos exist.
+* **Why:** Guarantees zero missed uploads regardless of tab open order and keeps the venue screen engaging between uploads.
+
+## 5. Mobile Onboarding via LAN QR Code
+* **Gap:** Typing `localhost` on a phone does not connect to the host laptop running the server.
+* **Decision:** `GET /api/config` inspects `os.networkInterfaces()` to detect the host machine's local Wi-Fi IPv4 address (`http://<LAN-IP>:3000`) and generates a scannable QR code shown on both `/display` and `/`.
+* **Why:** Allows visitors on the same Wi-Fi network to scan and upload immediately during live events or demos.
