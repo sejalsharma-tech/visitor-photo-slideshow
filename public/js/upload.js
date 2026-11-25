@@ -11,9 +11,52 @@ const uploadedShowcase = document.getElementById('uploadedShowcase');
 const showcaseTitle = document.getElementById('showcaseTitle');
 const uploadedGrid = document.getElementById('uploadedGrid');
 
+const uploadQrBox = document.getElementById('uploadQrBox');
+const uploadQrImg = document.getElementById('uploadQrImg');
+const uploadShareUrl = document.getElementById('uploadShareUrl');
+const copyUrlBtn = document.getElementById('copyUrlBtn');
+const qrZoomTrigger = document.getElementById('qrZoomTrigger');
+const qrZoomModal = document.getElementById('qrZoomModal');
+const qrZoomImg = document.getElementById('qrZoomImg');
+const qrZoomUrlText = document.getElementById('qrZoomUrlText');
+
 let selectedFiles = [];
+let shareableUrl = window.location.origin;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
+// Fetch LAN URL & QR Code for Upload Page
+fetch('/api/config')
+  .then((res) => res.json())
+  .then((data) => {
+    if (data.uploadUrl) shareableUrl = data.uploadUrl;
+    if (data.qrDataUrl && uploadQrBox) {
+      uploadQrImg.src = data.qrDataUrl;
+      qrZoomImg.src = data.qrDataUrl;
+      uploadShareUrl.textContent = shareableUrl;
+      qrZoomUrlText.textContent = shareableUrl;
+      uploadQrBox.style.display = 'flex';
+    }
+  })
+  .catch(() => {});
+
+copyUrlBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(shareableUrl).then(() => {
+    const label = copyUrlBtn.querySelector('span');
+    label.textContent = 'Copied!';
+    setTimeout(() => {
+      label.textContent = 'Copy Upload Link';
+    }, 2000);
+  }).catch(() => {});
+});
+
+qrZoomTrigger.addEventListener('click', () => {
+  qrZoomModal.style.display = 'flex';
+});
+
+qrZoomModal.addEventListener('click', () => {
+  qrZoomModal.style.display = 'none';
+});
 
 // Subtle 3D Glass Card Tilt on Desktop
 tiltCard.addEventListener('mousemove', (e) => {
