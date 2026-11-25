@@ -959,3 +959,141 @@ body.display-mode {
   display: block;
   margin: 0 auto 14px;
 }
+
+/* Shoutout Caption Input & Character Counter */
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.label-row label {
+  margin-bottom: 0;
+}
+
+.char-count {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Selectable Photo Frame Pills */
+.frame-pills {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.frame-pill {
+  padding: 9px 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(2, 6, 23, 0.5);
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.frame-pill:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #fff;
+}
+
+.frame-pill.active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(129, 140, 248, 0.28));
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.28);
+}
+
+/* Thumbnail & TV Frame Visual Styles */
+.preview-item.frame-polaroid {
+  background: #f8fafc;
+  padding: 4px 4px 12px;
+  border-radius: 6px;
+}
+.preview-item.frame-warm img,
+#slide-stage.frame-warm #slide-img {
+  filter: sepia(0.24) saturate(1.25) contrast(1.06) brightness(1.03);
+}
+.preview-item.frame-noir img,
+#slide-stage.frame-noir #slide-img {
+  filter: grayscale(1) contrast(1.22) brightness(1.04);
+}
+
+/* TV Stage Frame Wrappers */
+#slide-stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.35s ease;
+}
+
+#slide-stage.frame-polaroid {
+  background: #f8fafc;
+  padding: 18px 18px 22px;
+  border-radius: 10px;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.9);
+  transform: rotate(-1deg);
+}
+
+#slide-stage.frame-polaroid #slide-img {
+  max-height: 72vh;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+}
+
+.polaroid-footer {
+  display: none;
+  width: 100%;
+  padding-top: 14px;
+  text-align: center;
+  color: #0f172a;
+}
+
+#slide-stage.frame-polaroid .polaroid-footer {
+  display: block;
+}
+
+.polaroid-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.polaroid-caption {
+  font-size: 0.95rem;
+  color: #475569;
+  margin-top: 2px;
+}
+
+/* TV Overlay Shoutout Caption */
+.visitor-caption {
+  margin-top: 8px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  max-width: 440px;
+  line-height: 1.4;
+}
+
+/* TV HUD Control Group */
+.hud-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.hud-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fecaca;
+}

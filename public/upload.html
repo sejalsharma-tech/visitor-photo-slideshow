@@ -18,7 +18,7 @@
   <div class="card" id="tiltCard">
     <div class="brand-header">
       <div class="brand-lockup">
-        <svg class="brand-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="brand-logo" viewBox="0 0 48 48" fill="none" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)">
           <defs>
             <linearGradient id="prismGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stop-color="#38BDF8" />
@@ -54,6 +54,24 @@
       <div class="form-group">
         <label for="identifier">Email or Phone Number (recognizes returning visits)</label>
         <input type="text" id="identifier" required placeholder="e.g. aarav@example.com" />
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="caption">TV Shoutout Caption (Optional)</label>
+          <span class="char-count" id="captionCount">0 / 80</span>
+        </div>
+        <input type="text" id="caption" maxlength="80" placeholder="e.g. Tech Fest 2026 Crew! 🎉" />
+      </div>
+
+      <div class="form-group">
+        <label>Choose TV Photo Frame</label>
+        <div class="frame-pills" id="framePills">
+          <button type="button" class="frame-pill active" data-frame="glass">Glass</button>
+          <button type="button" class="frame-pill" data-frame="polaroid">Polaroid</button>
+          <button type="button" class="frame-pill" data-frame="warm">Warm Film</button>
+          <button type="button" class="frame-pill" data-frame="noir">Noir B&amp;W</button>
+        </div>
       </div>
 
       <div class="form-group">
@@ -114,7 +132,6 @@
       </div>
     </div>
 
-    <!-- Compact Scannable QR Code Share Card -->
     <div class="qr-share-box" id="uploadQrBox">
       <div class="qr-mini-frame" id="qrZoomTrigger" title="Click to enlarge QR code">
         <img id="uploadQrImg" src="" alt="Upload Page QR Code" />
@@ -151,7 +168,6 @@
     </div>
   </div>
 
-  <!-- Enlarged QR Modal -->
   <div class="qr-modal" id="qrZoomModal">
     <div class="qr-modal-card">
       <img id="qrZoomImg" src="" alt="Enlarged QR Code" />

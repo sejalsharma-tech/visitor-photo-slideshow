@@ -25,15 +25,29 @@
       <span id="queue-status">LIVE • Waiting for uploads</span>
     </div>
 
-    <button type="button" class="hud-pill hud-btn" id="fullscreenBtn">
-      <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="15 3 21 3 21 9" />
-        <polyline points="9 21 3 21 3 15" />
-        <line x1="21" y1="3" x2="14" y2="10" />
-        <line x1="3" y1="21" x2="10" y2="14" />
-      </svg>
-      <span>Fullscreen</span>
-    </button>
+    <div class="hud-controls">
+      <button type="button" class="hud-pill hud-btn" id="pauseBtn" title="Shortcut: Space">
+        <span id="pauseLabel">⏸ Pause</span>
+      </button>
+      <button type="button" class="hud-pill hud-btn" id="nextBtn" title="Shortcut: Right Arrow">
+        <span>⏭ Next</span>
+      </button>
+      <button type="button" class="hud-pill hud-btn danger" id="hideBtn" title="Shortcut: H (Remove from screen)">
+        <span>✕ Hide Slide</span>
+      </button>
+      <button type="button" class="hud-pill hud-btn" id="soundBtn" title="Toggle Arrival Chime">
+        <span id="soundLabel">🔔 Chime On</span>
+      </button>
+      <button type="button" class="hud-pill hud-btn" id="fullscreenBtn">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 3 21 3 21 9" />
+          <polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+        <span>Fullscreen</span>
+      </button>
+    </div>
   </div>
 
   <div id="idle-screen" class="idle-layout">
@@ -55,7 +69,7 @@
       <p>Scan the QR code with your phone camera to share your photos live on this screen.</p>
       <div class="idle-steps">
         <span class="step-pill">1. Scan QR</span>
-        <span class="step-pill">2. Select Photos</span>
+        <span class="step-pill">2. Pick Frame &amp; Shoutout</span>
         <span class="step-pill">3. Live on TV</span>
       </div>
       <div class="url-chip" id="uploadUrlChip">Open Upload Page on Your Device</div>
@@ -72,9 +86,16 @@
 
   <div id="slideshow-container">
     <div id="ambient-backdrop"></div>
-    <img id="slide-img" src="" alt="Visitor Photo" />
+    <div id="slide-stage" class="frame-glass">
+      <img id="slide-img" src="" alt="Visitor Photo" />
+      <div class="polaroid-footer">
+        <div class="polaroid-name" id="polaroid-name"></div>
+        <div class="polaroid-caption" id="polaroid-caption"></div>
+      </div>
+    </div>
     <div class="overlay">
       <h2 id="visitor-name"></h2>
+      <p id="visitor-caption" class="visitor-caption" style="display: none;"></p>
       <span id="visitor-badge" class="badge"></span>
       <div class="progress-track">
         <div class="progress-fill" id="progress-fill"></div>

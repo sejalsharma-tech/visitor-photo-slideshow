@@ -10,6 +10,9 @@ const tiltCard = document.getElementById('tiltCard');
 const uploadedShowcase = document.getElementById('uploadedShowcase');
 const showcaseTitle = document.getElementById('showcaseTitle');
 const uploadedGrid = document.getElementById('uploadedGrid');
+const captionInput = document.getElementById('caption');
+const captionCount = document.getElementById('captionCount');
+const framePills = document.getElementById('framePills');
 
 const uploadQrBox = document.getElementById('uploadQrBox');
 const uploadQrImg = document.getElementById('uploadQrImg');
@@ -21,11 +24,27 @@ const qrZoomImg = document.getElementById('qrZoomImg');
 const qrZoomUrlText = document.getElementById('qrZoomUrlText');
 
 let selectedFiles = [];
+let selectedFrame = 'glass';
 let shareableUrl = window.location.origin;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
-// Fetch LAN URL & QR Code for Upload Page
+// Caption character counter
+captionInput.addEventListener('input', () => {
+  captionCount.textContent = `${captionInput.value.length} / 80`;
+});
+
+// Selectable Frame Pills
+framePills.addEventListener('click', (e) => {
+  const btn = e.target.closest('.frame-pill');
+  if (!btn) return;
+  document.querySelectorAll('.frame-pill').forEach((p) => p.classList.remove('active'));
+  btn.classList.add('active');
+  selectedFrame = btn.dataset.frame;
+  renderPreviews();
+});
+
+// Fetch LAN URL & QR Code
 fetch('/api/config')
   .then((res) => res.json())
   .then((data) => {
@@ -58,7 +77,7 @@ qrZoomModal.addEventListener('click', () => {
   qrZoomModal.style.display = 'none';
 });
 
-// Subtle 3D Glass Card Tilt on Desktop
+// Subtle 3D Glass Card Tilt
 tiltCard.addEventListener('mousemove', (e) => {
   if (window.innerWidth < 768) return;
   const rect = tiltCard.getBoundingClientRect();
@@ -102,7 +121,7 @@ function renderPreviews() {
   selectedFiles.forEach((file, index) => {
     const url = URL.createObjectURL(file);
     const item = document.createElement('div');
-    item.className = 'preview-item';
+    item.className = `preview-item frame-${selectedFrame}`;
     item.innerHTML = `
       <img src="${url}" alt="${file.name}" />
       <button type="button" class="remove-thumb" data-idx="${index}" title="Remove">&times;</button>
@@ -111,14 +130,14 @@ function renderPreviews() {
   });
 }
 
-function renderUploadedShowcase(visitorName, photoUrls) {
+function renderUploadedShowcase(visitorName, photoUrls, frameStyle) {
   if (!photoUrls || photoUrls.length === 0) return;
   showcaseTitle.textContent = `${visitorName}'s Uploaded Photos`;
   uploadedGrid.innerHTML = '';
 
   photoUrls.forEach((url) => {
     const item = document.createElement('div');
-    item.className = 'preview-item';
+    item.className = `preview-item frame-${frameStyle || 'glass'}`;
     item.innerHTML = `<img src="${url}" alt="Uploaded photo" />`;
     uploadedGrid.appendChild(item);
   });
@@ -134,7 +153,6 @@ previewGrid.addEventListener('click', (e) => {
   }
 });
 
-// Drag & Drop handlers
 dropZone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', (e) => {
   addFiles(e.target.files);
@@ -152,7 +170,6 @@ dropZone.addEventListener('drop', (e) => {
   addFiles(e.dataTransfer.files);
 });
 
-// Form Submit
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (selectedFiles.length === 0) {
@@ -160,17 +177,20 @@ form.addEventListener('submit', async (e) => {
   }
 
   const visitorNameInput = document.getElementById('name').value.trim();
+  const submittedFrame = selectedFrame;
   const fallbackUrls = selectedFiles.map((file) => URL.createObjectURL(file));
 
   const formData = new FormData();
   formData.append('name', visitorNameInput);
   formData.append('identifier', document.getElementById('identifier').value);
+  formData.append('caption', captionInput.value.trim());
+  formData.append('frameStyle', submittedFrame);
   formData.append('consent', document.getElementById('consent').checked);
 
   selectedFiles.forEach((file) => formData.append('photos', file));
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Casting to Screen...';
+  submitBtn.querySelector('span').textContent = 'Casting to Screen...';
 
   try {
     const res = await fetch('/api/upload', { method: 'POST', body: formData });
@@ -182,9 +202,10 @@ form.addEventListener('submit', async (e) => {
         data.uploadedPhotos && data.uploadedPhotos.length > 0
           ? data.uploadedPhotos.map((p) => p.url)
           : fallbackUrls;
-      renderUploadedShowcase(data.visitorName || visitorNameInput, finalUrls);
+      renderUploadedShowcase(data.visitorName || visitorNameInput, finalUrls, submittedFrame);
 
       form.reset();
+      captionCount.textContent = '0 / 80';
       selectedFiles = [];
       renderPreviews();
       socket.emit('send-reaction', { emoji: '🎉' });
@@ -195,18 +216,16 @@ form.addEventListener('submit', async (e) => {
     showStatus('Network error. Please try again.', 'error');
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Upload & Cast to Screen';
+    submitBtn.querySelector('span').textContent = 'Upload & Cast to Screen';
   }
 });
 
-// Live Emoji Reactions to TV
 document.querySelectorAll('.react-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
     socket.emit('send-reaction', { emoji: btn.dataset.emoji });
   });
 });
 
-// Privacy Opt-Out
 deleteBtn.addEventListener('click', async () => {
   const identifier = prompt('Enter the Email or Phone Number you used to upload:');
   if (!identifier) return;
