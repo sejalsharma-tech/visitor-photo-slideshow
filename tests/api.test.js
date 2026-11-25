@@ -44,10 +44,26 @@ test('POST /api/upload rejects invalid non-image file types (.txt)', async () =>
   assert.match(data.error, /allowed/i);
 });
 
-test('POST /api/upload handles new and returning visitors properly', async () => {
+test('POST /api/upload blocks profanity in shoutout captions', async () => {
+  const form = new FormData();
+  form.append('name', 'Test User');
+  form.append('identifier', TEST_IDENTIFIER);
+  form.append('caption', 'This is bullshit');
+  form.append('consent', 'true');
+  form.append('photos', new Blob([SAMPLE_PNG], { type: 'image/png' }), 'sample.png');
+
+  const res = await fetch(`${BASE_URL}/api/upload`, { method: 'POST', body: form });
+  assert.equal(res.status, 400);
+  const data = await res.json();
+  assert.match(data.error, /inappropriate/i);
+});
+
+test('POST /api/upload saves frame style, shoutout, and handles returning visitors', async () => {
   const form1 = new FormData();
   form1.append('name', 'Automated Tester');
   form1.append('identifier', TEST_IDENTIFIER);
+  form1.append('caption', 'Hello Tech Fest!');
+  form1.append('frameStyle', 'polaroid');
   form1.append('consent', 'true');
   form1.append('photos', new Blob([SAMPLE_PNG], { type: 'image/png' }), 'visit1.png');
 
@@ -55,6 +71,8 @@ test('POST /api/upload handles new and returning visitors properly', async () =>
   assert.equal(res1.status, 201);
   const data1 = await res1.json();
   assert.equal(data1.isReturning, false);
+  assert.equal(data1.uploadedPhotos[0].frameStyle, 'polaroid');
+  assert.equal(data1.uploadedPhotos[0].caption, 'Hello Tech Fest!');
 
   const form2 = new FormData();
   form2.append('name', 'Automated Tester');
