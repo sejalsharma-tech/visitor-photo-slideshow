@@ -63,7 +63,7 @@ router.get('/config', async (req, res) => {
   }
 
   res.json({
-    slideDurationMs: parseInt(process.env.SLIDE_DURATION_MS, 10) || 8000,
+    slideDurationMs: parseInt(process.env.SLIDE_DURATION_MS, 10) || 5000,
     uploadUrl,
     qrDataUrl,
   });

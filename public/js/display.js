@@ -18,7 +18,7 @@ let loopPool = [];
 let loopIndex = 0;
 let isPlaying = false;
 let currentPlayingUrl = null;
-let slideDurationMs = 8000;
+let slideDurationMs = 5000;
 let slideTimer = null;
 
 fetch('/api/config')
