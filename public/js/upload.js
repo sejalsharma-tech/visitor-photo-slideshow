@@ -7,6 +7,9 @@ const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('photos');
 const previewGrid = document.getElementById('previewGrid');
 const tiltCard = document.getElementById('tiltCard');
+const uploadedShowcase = document.getElementById('uploadedShowcase');
+const showcaseTitle = document.getElementById('showcaseTitle');
+const uploadedGrid = document.getElementById('uploadedGrid');
 
 let selectedFiles = [];
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -65,6 +68,21 @@ function renderPreviews() {
   });
 }
 
+function renderUploadedShowcase(visitorName, photoUrls) {
+  if (!photoUrls || photoUrls.length === 0) return;
+  showcaseTitle.textContent = `${visitorName}'s Uploaded Photos`;
+  uploadedGrid.innerHTML = '';
+
+  photoUrls.forEach((url) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    item.innerHTML = `<img src="${url}" alt="Uploaded photo" />`;
+    uploadedGrid.appendChild(item);
+  });
+
+  uploadedShowcase.style.display = 'block';
+}
+
 previewGrid.addEventListener('click', (e) => {
   if (e.target.classList.contains('remove-thumb')) {
     const idx = parseInt(e.target.dataset.idx, 10);
@@ -98,8 +116,11 @@ form.addEventListener('submit', async (e) => {
     return showStatus('Please select or drop at least one photo.', 'error');
   }
 
+  const visitorNameInput = document.getElementById('name').value.trim();
+  const fallbackUrls = selectedFiles.map((file) => URL.createObjectURL(file));
+
   const formData = new FormData();
-  formData.append('name', document.getElementById('name').value);
+  formData.append('name', visitorNameInput);
   formData.append('identifier', document.getElementById('identifier').value);
   formData.append('consent', document.getElementById('consent').checked);
 
@@ -114,6 +135,12 @@ form.addEventListener('submit', async (e) => {
 
     if (res.ok) {
       showStatus(data.message, 'success');
+      const finalUrls =
+        data.uploadedPhotos && data.uploadedPhotos.length > 0
+          ? data.uploadedPhotos.map((p) => p.url)
+          : fallbackUrls;
+      renderUploadedShowcase(data.visitorName || visitorNameInput, finalUrls);
+
       form.reset();
       selectedFiles = [];
       renderPreviews();
@@ -149,6 +176,10 @@ deleteBtn.addEventListener('click', async () => {
     });
     const data = await res.json();
     showStatus(data.message || data.error, res.ok ? 'success' : 'error');
+    if (res.ok) {
+      uploadedShowcase.style.display = 'none';
+      uploadedGrid.innerHTML = '';
+    }
   } catch {
     showStatus('Failed to connect to server.', 'error');
   }

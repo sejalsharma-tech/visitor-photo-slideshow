@@ -110,9 +110,11 @@ router.post('/upload', upload.array('photos', 5), async (req, res) => {
       message: isReturning
         ? `Welcome back, ${cleanName}! Your new and previous photos are queued.`
         : `Thank you, ${cleanName}! Your photos are now queued for display.`,
+      visitorName: cleanName,
       isReturning,
       uploadedCount: newPhotos.length,
       previousCount: previousPhotos.length,
+      uploadedPhotos: newPhotos,
     });
   } catch (err) {
     console.error(err);
